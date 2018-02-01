@@ -1,0 +1,134 @@
+package com.wanna.testpic;
+
+import android.Manifest;
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+
+public class MainActivity extends AppCompatActivity {
+    private File tempFile;
+    Button bt1;
+    ImageView imageView;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        bt1 = (Button)findViewById(R.id.petButton);
+        bt1.setText("選擇圖片");//設定按鈕內文字
+
+
+
+    }
+    public void petButton(View v)
+    {
+
+
+        int permission = ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[] {WRITE_EXTERNAL_STORAGE,
+                            READ_EXTERNAL_STORAGE},
+                    123
+            );
+        }
+        else
+        {
+
+            readPic();
+        }
+    }
+    private void readPic()
+    {
+        this.tempFile = new File(getExternalFilesDir("PHOTO"), "myphoto.jpg");
+        //找尋Button按鈕
+
+
+        bt1.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+               Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+               //開啟Pictures畫面Type設定為image
+               intent.setType("image/*");
+               //使用Intent.ACTION_GET_CONTENT這個Action  //會開啟選取圖檔視窗讓您選取手機內圖檔
+               intent.setAction(Intent.ACTION_GET_CONTENT);
+               intent.putExtra("crop", true);// crop=true 有這句才能叫出裁剪頁面.
+               intent.putExtra("aspectX", 1);// 这兩項為裁剪框的比例.
+               intent.putExtra("aspectY", 1);// x:y=1:1
+               intent.putExtra("return-data", true);
+               intent.putExtra("output", Uri.fromFile(tempFile));
+              intent.putExtra("outputFormat", "JPEG");//返回格式
+
+
+                //取得相片後返回本畫面
+                startActivityForResult(Intent.createChooser(intent,"選擇圖片"),456);
+            }
+        });
+
+    }
+    //取得相片後返回的監聽式
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 456) {
+            //當使用者按下確定後
+            if (resultCode == RESULT_OK) {
+                // 設定到ImageView
+
+                Uri uri = data.getData();//取得圖檔的路徑位置
+                 //Log.d("uri", uri.toString());//寫log
+                //抽象資料的接口
+                ContentResolver cr = this.getContentResolver();
+                try {
+                    Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));//由抽象資料接口轉換圖檔路徑為Bitmap
+                    imageView = (ImageView) findViewById(R.id.petImage);//取得圖片控制項ImageView
+                    imageView.setImageBitmap(bitmap);// 將Bitmap設定到ImageView
+                } catch (FileNotFoundException e) {
+                    Log.e("Exception", e.getMessage(), e);
+                }
+            }
+        }
+
+
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 123)
+        {
+
+            if (grantResults.length > 0
+                    && grantResults[0] == PERMISSION_GRANTED) {
+                //取得權限，進行檔案存取
+
+                readPic();
+            } else {
+                //使用者拒絕權限，停用檔案存取功能
+            }
+            return;
+        }
+    }
+}
