@@ -19,8 +19,8 @@
 
     <ImageView
         android:id="@+id/petImage"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="130dp"
+        android:layout_height="130dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="88dp"
