@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,11 +19,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -73,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         myRef.setValue("Hello, World!");
 
 
+
         Toast.makeText(MainActivity.this,"已執行",Toast.LENGTH_SHORT).show();
     }
 
@@ -110,16 +117,16 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-               //開啟Pictures畫面Type設定為image
-               intent.setType("image/*");
-               //使用Intent.ACTION_GET_CONTENT這個Action  //會開啟選取圖檔視窗讓您選取手機內圖檔
-               intent.setAction(Intent.ACTION_GET_CONTENT);
-               intent.putExtra("crop", true);// crop=true 有這句才能叫出裁剪頁面.
-               intent.putExtra("aspectX", 1);// 这兩項為裁剪框的比例.
-               intent.putExtra("aspectY", 1);// x:y=1:1
-               intent.putExtra("return-data", true);
-               intent.putExtra("output", Uri.fromFile(tempFile));
-              intent.putExtra("outputFormat", "JPEG");//返回格式
+                //開啟Pictures畫面Type設定為image
+                intent.setType("image/*");
+                //使用Intent.ACTION_GET_CONTENT這個Action  //會開啟選取圖檔視窗讓您選取手機內圖檔
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.putExtra("crop", true);// crop=true 有這句才能叫出裁剪頁面.
+                intent.putExtra("aspectX", 1);// 这兩項為裁剪框的比例.
+                intent.putExtra("aspectY", 1);// x:y=1:1
+                intent.putExtra("return-data", true);
+                intent.putExtra("output", Uri.fromFile(tempFile));
+                intent.putExtra("outputFormat", "JPEG");//返回格式
 
 
                 //取得相片後返回本畫面
@@ -138,17 +145,34 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 // 設定到ImageView
 
+                //上傳Firebase
                 Uri uri = data.getData();//取得圖檔的路徑位置
+                FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference storageRef = storage.getReference();
+                StorageReference riversRef = storageRef.child("images");
+
+                UploadTask uploadTask = riversRef.putFile(uri);
+                uploadTask.addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Log.d("firebase",exception.getMessage());
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Log.d("firebase","success");
+                    }
+                });
                  //Log.d("uri", uri.toString());//寫log
                 //抽象資料的接口
-                ContentResolver cr = this.getContentResolver();
-                try {
-                    Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));//由抽象資料接口轉換圖檔路徑為Bitmap
-                    imageView = (ImageView) findViewById(R.id.petImage);//取得圖片控制項ImageView
-                    imageView.setImageBitmap(bitmap);// 將Bitmap設定到ImageView
-                } catch (FileNotFoundException e) {
-                    Log.e("Exception", e.getMessage(), e);
-                }
+//                ContentResolver cr = this.getContentResolver();
+//                try {
+//                    Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));//由抽象資料接口轉換圖檔路徑為Bitmap
+//                    imageView = (ImageView) findViewById(R.id.petImage);//取得圖片控制項ImageView
+//                    imageView.setImageBitmap(bitmap);// 將Bitmap設定到ImageView
+//                } catch (FileNotFoundException e) {
+//                    Log.e("Exception", e.getMessage(), e);
+//                }
             }
         }
 
