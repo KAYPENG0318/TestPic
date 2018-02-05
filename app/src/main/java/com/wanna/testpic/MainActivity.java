@@ -15,6 +15,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,6 +32,9 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 public class MainActivity extends AppCompatActivity {
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("message");
+
     private File tempFile;
     Button bt1;
     ImageView imageView;
@@ -35,8 +46,38 @@ public class MainActivity extends AppCompatActivity {
         bt1.setText("選擇圖片");//設定按鈕內文字
 
 
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+
+                TextView tv = (TextView)findViewById(R.id.textView);
+                String value = dataSnapshot.getValue(String.class);
+                tv.setText(value);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+
+            }
+        });
+
 
     }
+    //上傳firebase
+    public void buttonSend(View v)
+    {
+        myRef.setValue("Hello, World!");
+
+
+        Toast.makeText(MainActivity.this,"已執行",Toast.LENGTH_SHORT).show();
+    }
+
+
+
     public void petButton(View v)
     {
 
@@ -131,4 +172,5 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
     }
+
 }
