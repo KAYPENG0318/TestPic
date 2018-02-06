@@ -83,8 +83,8 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
-
-        StorageReference riversRef = storageRef.child("image/" + FileUri.getQueryParameterNames());
+        String str="image/" + String.valueOf(new java.util.Date().getTime());
+        StorageReference riversRef = storageRef.child(str);
         //StorageReference storageRef = firebase.storage().ref();
         //StorageReference imagesRef = storageRef.child("images");
 
